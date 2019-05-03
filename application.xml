@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+
+<board type="Arduino Nano" name="Ethernet I2C LED Dimmer">
+    <info>
+        An ethernet controlled I2C LED bulb dimmer
+    </info>
+    
+    <devices>
+        <device name="Ethernet" type="ENC28J60">
+        </device>
+    </devices>
+
+    <parameters>
+        <parameter name="Dimmer" type="Integer" count="4">
+            <setting id="clip" value="false"/>
+            <setting id="min" value="0"/>
+            <setting id="max" value="100"/>
+            <setting id="init_value" value="0" />
+            <setting id="type" value="uint8_t" />
+            <setting id="use_eeprom" value="true" />
+        </parameter>
+    </parameters>
+
+    <modules>
+    	<module>HTTP Get Server</module>
+        <module>Oneshot Task</module>
+    </modules>
+
+    <custom_code>
+    	<file>handler.cpp</file>
+    </custom_code>
+
+    <defines>
+        <define>ENC28J60_BUFFER_SIZE 128</define>
+    </defines>
+
+    <raat protocol="url"></raat>
+</board>
