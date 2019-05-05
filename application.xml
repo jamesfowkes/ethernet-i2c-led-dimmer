@@ -23,7 +23,7 @@
 
     <modules>
     	<module>HTTP Get Server</module>
-        <module>Oneshot Task</module>
+        <module>Task</module>
     </modules>
 
     <custom_code>
@@ -33,6 +33,10 @@
     <defines>
         <define>ENC28J60_BUFFER_SIZE 128</define>
     </defines>
+
+    <logging>
+        <log_module>APPLICATION</log_module>
+    </logging>
 
     <raat protocol="url"></raat>
 </board>
