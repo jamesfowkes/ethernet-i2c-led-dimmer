@@ -61,7 +61,7 @@ static void send_standard_erm_response()
     s_server.finish_headers();
 }
 
-static void set_dimmer(char const * const pValue, const uint8_t channel, bool send_response=true)
+static void set_dimmer_from_string(char const * const pValue, const uint8_t channel)
 {
     int32_t parsed;
     if (raat_parse_single_numeric(pValue, parsed, NULL))
@@ -92,34 +92,34 @@ static void set_dimmer(char const * const pValue, const uint8_t channel, bool se
 
 static void set_all_dimmers(char const * const url)
 {
-    set_dimmer(&url[5], 0);
-    set_dimmer(&url[5], 1);
-    set_dimmer(&url[5], 2);
-    set_dimmer(&url[5], 3);
+    set_dimmer_from_string(&url[5], 0);
+    set_dimmer_from_string(&url[5], 1);
+    set_dimmer_from_string(&url[5], 2);
+    set_dimmer_from_string(&url[5], 3);
     send_standard_erm_response();
 }
 
 static void set_dimmer1(char const * const url)
 {
-    set_dimmer(&url[9], 0);
+    set_dimmer_from_string(&url[9], 0);
     send_standard_erm_response();
 }
 
 static void set_dimmer2(char const * const url)
 {
-    set_dimmer(&url[9], 1);
+    set_dimmer_from_string(&url[9], 1);
     send_standard_erm_response();
 }
 
 static void set_dimmer3(char const * const url)
 {
-    set_dimmer(&url[9], 2);
+    set_dimmer_from_string(&url[9], 2);
     send_standard_erm_response();
 }
 
 static void set_dimmer4(char const * const url)
 {
-    set_dimmer(&url[9], 3);
+    set_dimmer_from_string(&url[9], 3);
     send_standard_erm_response();
 }
 
@@ -199,5 +199,31 @@ void raat_custom_setup(const raat_devices_struct& devices, const raat_params_str
 void raat_custom_loop(const raat_devices_struct& devices, const raat_params_struct& params)
 {
     (void)devices; (void)params;
+
+    if (devices.pToggle_Input->check_low_and_clear())
+    {
+        if (s_currentValues[0] || s_currentValues[1] || s_currentValues[2] || s_currentValues[3])
+        {
+            s_currentValues[0] = 0;
+            s_updateFlags[0] = true;
+            s_currentValues[1] = 0;
+            s_updateFlags[1] = true;
+            s_currentValues[2] = 0;
+            s_updateFlags[2] = true;
+            s_currentValues[3] = 0;
+            s_updateFlags[3] = true;
+        }
+        else
+        {
+            s_currentValues[0] = 100;
+            s_updateFlags[0] = true;
+            s_currentValues[1] = 100;
+            s_updateFlags[1] = true;
+            s_currentValues[2] = 100;
+            s_updateFlags[2] = true;
+            s_currentValues[3] = 100;
+            s_updateFlags[3] = true;
+        }
+    }
     s_dimmer_task.run();
 }
