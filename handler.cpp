@@ -22,11 +22,23 @@ static bool s_updateFlags[4];
 
 static const raat_params_struct * s_pParams;
 
-static void setChannel(const uint8_t channel, const uint8_t value)
+static void etherDelay(unsigned long msdelay)
+{
+    unsigned long now = millis();
+
+    while ((millis() - now) < msdelay)
+    {
+        raat_handle_any_pending_commands();
+        raat_service_timer();
+    }
+}
+
+static void setChannel(const uint8_t channel, const uint8_t value, bool bLog=true)
 {
     if (value <= 100)
     {
-        raat_logln_P(LOG_APP, PSTR("Setting channel %u to %u"), channel, s_currentValues[channel]);
+        s_currentValues[channel] = value;
+        if (bLog) { raat_logln_P(LOG_APP, PSTR("Setting channel %u to %u"), channel, s_currentValues[channel]); }
         Wire.beginTransmission(DIMMER_I2C_ADDRESS);
         Wire.write(channel + CHANNEL_1_REGISTER);
         Wire.write(100-value);
@@ -34,7 +46,7 @@ static void setChannel(const uint8_t channel, const uint8_t value)
     }
     else
     {
-        raat_logln_P(LOG_APP, PSTR("Value %u out of range"), s_currentValues[channel]);
+        if (bLog) { raat_logln_P(LOG_APP, PSTR("Value %u out of range"), value); }
     }
 }
 
@@ -148,6 +160,39 @@ static void restore_values(char const * const url)
     }
 }
 
+static void flicker_leds(char const * const url)
+{
+    static bool running = false;
+
+    static const uint8_t flickerValues[] = {
+        //25, 35, 25, 40, 30, 25, 50, 30, 75, 100
+        20, 27, 23, 26, 22, 20, 26, 28, 24,
+        30, 27, 35, 32, 36, 34, 48, 42, 45, 52, 50,
+        59, 55, 62, 67, 64, 71, 65, 72, 78, 74, 80, 76,
+        85, 82, 88, 94, 90, 93, 97, 100
+    };
+
+    if (!running)
+    {
+        running = true;
+
+        if (url)
+        {
+            send_standard_erm_response();
+        }
+
+        uint8_t i = 0;
+        while (flickerValues[i] != 100)
+        {
+            setChannel(0, flickerValues[i]);
+            etherDelay(80+random(0, 70));
+            i++;
+        }
+        setChannel(0, 100);
+        running = false;   
+    }
+}
+
 static const char DIMMER1_URL[] PROGMEM = "/dimmer1";
 static const char DIMMER2_URL[] PROGMEM = "/dimmer2";
 static const char DIMMER3_URL[] PROGMEM = "/dimmer3";
@@ -155,6 +200,8 @@ static const char DIMMER4_URL[] PROGMEM = "/dimmer4";
 static const char ALL_DIMMERS_URL[] PROGMEM = "/all";
 static const char SAVE_URL[] PROGMEM = "/save";
 static const char RESTORE_URL[] PROGMEM = "/restore";
+static const char FLICKER_URL[] PROGMEM = "/flicker";
+
 static http_get_handler s_handlers[] = 
 {
     {DIMMER1_URL, set_dimmer1},
@@ -164,6 +211,7 @@ static http_get_handler s_handlers[] =
     {ALL_DIMMERS_URL, set_all_dimmers},
     {SAVE_URL, save_values},
     {RESTORE_URL, restore_values},
+    {FLICKER_URL, flicker_leds},
     {"", NULL}
 };
 
@@ -180,6 +228,8 @@ char * ethernet_response_provider()
 void raat_custom_setup(const raat_devices_struct& devices, const raat_params_struct& params)
 {
     (void)devices;
+
+    randomSeed(analogRead(A0));
 
     Wire.begin();
 
