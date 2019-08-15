@@ -23,6 +23,11 @@
             <setting id="type" value="uint8_t" />
             <setting id="use_eeprom" value="true" />
         </parameter>
+        <parameter name="FlickerSettings" type="String">
+            <setting id="reset_value" value="20,27,23,26,22,20,26,28,24,30,27,35,32,36,34,48,42,45,52,50,59,55,62,67,64,71,65,72,78,74,80,76,85,82,88,94,90,93,97,100"/>
+            <setting id="length" value="256"/>
+            <setting id="use_eeprom" value="true"/>
+        </parameter>
     </parameters>
 
     <modules>

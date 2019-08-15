@@ -22,6 +22,8 @@ static bool s_updateFlags[4];
 
 static const raat_params_struct * s_pParams;
 
+static const uint8_t flickerValues[256] = {100};
+
 static void etherDelay(unsigned long msdelay)
 {
     unsigned long now = millis();
@@ -162,35 +164,20 @@ static void restore_values(char const * const url)
 
 static void flicker_leds(char const * const url)
 {
-    static bool running = false;
-
-    static const uint8_t flickerValues[] = {
-        //25, 35, 25, 40, 30, 25, 50, 30, 75, 100
-        20, 27, 23, 26, 22, 20, 26, 28, 24,
-        30, 27, 35, 32, 36, 34, 48, 42, 45, 52, 50,
-        59, 55, 62, 67, 64, 71, 65, 72, 78, 74, 80, 76,
-        85, 82, 88, 94, 90, 93, 97, 100
-    };
-
-    if (!running)
+    
+    if (url)
     {
-        running = true;
-
-        if (url)
-        {
-            send_standard_erm_response();
-        }
-
-        uint8_t i = 0;
-        while (flickerValues[i] != 100)
-        {
-            setChannel(0, flickerValues[i]);
-            etherDelay(80+random(0, 70));
-            i++;
-        }
-        setChannel(0, 100);
-        running = false;   
+        send_standard_erm_response();
     }
+
+    uint8_t i = 0;
+    while (flickerValues[i] != 100)
+    {
+        setChannel(0, flickerValues[i]);
+        etherDelay(80+random(0, 70));
+        i++;
+    }
+    setChannel(0, 100);
 }
 
 static const char DIMMER1_URL[] PROGMEM = "/dimmer1";
