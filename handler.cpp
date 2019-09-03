@@ -22,7 +22,7 @@ static bool s_updateFlags[4];
 
 static const raat_params_struct * s_pParams;
 
-static const uint8_t flickerValues[256] = {100};
+static const uint8_t flickerValues[64] = {100};
 
 static void etherDelay(unsigned long msdelay)
 {
@@ -180,6 +180,22 @@ static void flicker_leds(char const * const url)
     setChannel(0, 100);
 }
 
+static void get_dimmer_value(char const * const url)
+{
+    char dimmer_value[4];
+    if (url)
+    {
+        s_server.set_response_code_P(PSTR("200 OK"));
+        s_server.finish_headers();
+
+        if ((url[5] >= '0') && url[5] <= '3')
+        {
+            sprintf(dimmer_value, "%u", s_currentValues[0]);
+            s_server.add_body(dimmer_value);
+        }
+    }
+}
+
 static const char DIMMER1_URL[] PROGMEM = "/dimmer1";
 static const char DIMMER2_URL[] PROGMEM = "/dimmer2";
 static const char DIMMER3_URL[] PROGMEM = "/dimmer3";
@@ -188,6 +204,7 @@ static const char ALL_DIMMERS_URL[] PROGMEM = "/all";
 static const char SAVE_URL[] PROGMEM = "/save";
 static const char RESTORE_URL[] PROGMEM = "/restore";
 static const char FLICKER_URL[] PROGMEM = "/flicker";
+static const char QUERY_URL[] PROGMEM = "/get";
 
 static http_get_handler s_handlers[] = 
 {
@@ -199,6 +216,7 @@ static http_get_handler s_handlers[] =
     {SAVE_URL, save_values},
     {RESTORE_URL, restore_values},
     {FLICKER_URL, flicker_leds},
+    {QUERY_URL, get_dimmer_value},
     {"", NULL}
 };
 
