@@ -37,6 +37,8 @@
 
     <custom_code>
     	<file>handler.cpp</file>
+        <file>flicker.cpp</file>
+        <file>flicker.hpp</file>
     </custom_code>
 
     <defines>
@@ -47,5 +49,5 @@
         <log_module>APPLICATION</log_module>
     </logging>
 
-    <raat protocol="url" loglevel="RAAT_LOG_LEVEL_DEBUG"></raat>
+    <raat protocol="url" loglevel="RAAT_LOG_LEVEL_DEBUG" buffer_size="32"></raat>
 </board>
