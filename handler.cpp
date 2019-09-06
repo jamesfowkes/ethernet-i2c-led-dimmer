@@ -12,6 +12,8 @@
 
 #include "http-get-server.hpp"
 
+#include "flicker.hpp"
+
 static const uint8_t DIMMER_I2C_ADDRESS = 0x27;
 static const uint8_t CHANNEL_1_REGISTER = 0x80;
 
@@ -22,7 +24,7 @@ static bool s_updateFlags[4];
 
 static const raat_params_struct * s_pParams;
 
-static const uint8_t flickerValues[64] = {100};
+static const uint8_t s_flicker_values[64] = {100};
 
 static void etherDelay(unsigned long msdelay)
 {
@@ -35,7 +37,7 @@ static void etherDelay(unsigned long msdelay)
     }
 }
 
-static void setChannel(const uint8_t channel, const uint8_t value, bool bLog=true)
+void setChannel(const uint8_t channel, const uint8_t value, bool bLog=true)
 {
     if (value <= 100)
     {
@@ -164,20 +166,26 @@ static void restore_values(char const * const url)
 
 static void flicker_leds(char const * const url)
 {
+    uint8_t channels[4] = {NO_CHANNEL, NO_CHANNEL, NO_CHANNEL, NO_CHANNEL};
+
+    for (uint8_t i=0; i<4; i++)
+    {
+        if (inrange<char>(url[9+i], '0', '3'))
+        {
+            channels[i] = url[9+i] - '0';
+        }
+        else
+        {
+            return;
+        }
+    }
     
     if (url)
     {
         send_standard_erm_response();
     }
 
-    uint8_t i = 0;
-    while (flickerValues[i] != 100)
-    {
-        setChannel(0, flickerValues[i]);
-        etherDelay(80+random(0, 70));
-        i++;
-    }
-    setChannel(0, 100);
+    flicker_start(channels);
 }
 
 static void get_dimmer_value(char const * const url)
@@ -239,6 +247,9 @@ void raat_custom_setup(const raat_devices_struct& devices, const raat_params_str
     Wire.begin();
 
     s_pParams = &params;
+
+    flicker_setup(params.pFlickerSettings);
+
     restore_values(NULL);
     raat_logln_P(LOG_APP, PSTR("Restore values: %d,%d,%d,%d"),
         s_currentValues[0], s_currentValues[1],
@@ -249,6 +260,8 @@ void raat_custom_setup(const raat_devices_struct& devices, const raat_params_str
     {
         s_updateFlags[channel] = true;
     }
+
+
 }
 
 void raat_custom_loop(const raat_devices_struct& devices, const raat_params_struct& params)
