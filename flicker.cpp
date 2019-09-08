@@ -20,7 +20,7 @@ static bool set_next_value(void)
 {
     char * pEndOfThisValue;
     int32_t parsed;
-    bool more_values_follow;
+    bool more_values_follow = false;
     if (raat_parse_single_numeric(s_next_value, parsed, &pEndOfThisValue))
     {
         if (inrange<int32_t>(parsed, 0, 100))
@@ -29,11 +29,7 @@ static bool set_next_value(void)
             {
                 if (s_channels[channel_index] != NO_CHANNEL)
                 {
-                    setChannel(s_channels[channel_index], (uint8_t)parsed);
-                }
-                else
-                {
-                    return;
+                    setChannel(s_channels[channel_index], (uint8_t)parsed, false);
                 }
             }
         }
@@ -41,8 +37,17 @@ static bool set_next_value(void)
         more_values_follow = (*pEndOfThisValue == ',');
         if (more_values_follow)
         {
-            s_next_value++;
+            s_next_value = pEndOfThisValue+1;
         }
+        else
+        {
+            raat_logln_P(LOG_APP, PSTR("Flicker sequence complete!"));
+        }
+    }
+    else
+    {
+        uint8_t index = s_next_value - s_pValues->get();
+        raat_logln_P(LOG_APP, PSTR("Could not parse value at index %u"), index);
     }
     return more_values_follow;
 }
@@ -71,7 +76,11 @@ void flicker_setup(StringParam * pValues)
 
 void flicker_start(uint8_t * channels)
 {
-    if (s_bFlickering) { return; }
+    if (s_bFlickering)
+    {
+        raat_logln_P(LOG_APP, PSTR("Flicker already active!"));        
+        return;
+    }
     if (!channels) { return; }
 
     s_bFlickering = true;

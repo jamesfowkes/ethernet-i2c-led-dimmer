@@ -37,7 +37,7 @@ static void etherDelay(unsigned long msdelay)
     }
 }
 
-void setChannel(const uint8_t channel, const uint8_t value, bool bLog=true)
+void setChannel(const uint8_t channel, const uint8_t value, bool bLog)
 {
     if (value <= 100)
     {
@@ -170,15 +170,18 @@ static void flicker_leds(char const * const url)
 
     for (uint8_t i=0; i<4; i++)
     {
-        if (inrange<char>(url[9+i], '0', '3'))
+        if (inrange<char>(url[9+i], '1', '4'))
         {
-            channels[i] = url[9+i] - '0';
+            channels[i] = url[9+i] - '1';
         }
         else
         {
-            return;
+            break;
         }
     }
+
+    raat_logln_P(LOG_APP, PSTR("Flickering channels, %u, %u,  %u,  %u"),
+        channels[0], channels[1], channels[2], channels[3]);
     
     if (url)
     {
@@ -294,4 +297,5 @@ void raat_custom_loop(const raat_devices_struct& devices, const raat_params_stru
         }
     }
     s_dimmer_task.run();
+    flicker_run();
 }
