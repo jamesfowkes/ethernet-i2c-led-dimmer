@@ -17,7 +17,7 @@
 static const uint8_t DIMMER_I2C_ADDRESS = 0x27;
 static const uint8_t CHANNEL_1_REGISTER = 0x80;
 
-static HTTPGetServer s_server(true);
+static HTTPGetServer s_server(NULL);
 
 static uint8_t s_currentValues[4];
 static bool s_updateFlags[4];
@@ -106,40 +106,40 @@ static void set_dimmer_from_string(char const * const pValue, const uint8_t chan
     }
 }
 
-static void set_all_dimmers(char const * const url)
+static void set_all_dimmers(char const * const url, char const * const additional)
 {
-    set_dimmer_from_string(&url[5], 0);
-    set_dimmer_from_string(&url[5], 1);
-    set_dimmer_from_string(&url[5], 2);
-    set_dimmer_from_string(&url[5], 3);
+    set_dimmer_from_string(additional, 0);
+    set_dimmer_from_string(additional, 1);
+    set_dimmer_from_string(additional, 2);
+    set_dimmer_from_string(additional, 3);
     send_standard_erm_response();
 }
 
-static void set_dimmer1(char const * const url)
+static void set_dimmer1(char const * const url, char const * const additional)
 {
-    set_dimmer_from_string(&url[9], 0);
+    set_dimmer_from_string(additional, 0);
     send_standard_erm_response();
 }
 
-static void set_dimmer2(char const * const url)
+static void set_dimmer2(char const * const url, char const * const additional)
 {
-    set_dimmer_from_string(&url[9], 1);
+    set_dimmer_from_string(additional, 1);
     send_standard_erm_response();
 }
 
-static void set_dimmer3(char const * const url)
+static void set_dimmer3(char const * const url, char const * const additional)
 {
-    set_dimmer_from_string(&url[9], 2);
+    set_dimmer_from_string(additional, 2);
     send_standard_erm_response();
 }
 
-static void set_dimmer4(char const * const url)
+static void set_dimmer4(char const * const url, char const * const additional)
 {
-    set_dimmer_from_string(&url[9], 3);
+    set_dimmer_from_string(additional, 3);
     send_standard_erm_response();
 }
 
-static void save_values(char const * const url)
+static void save_values(char const * const url, char const * const additional)
 {
     for (uint8_t channel = 0; channel < 4; channel++)
     {
@@ -151,7 +151,7 @@ static void save_values(char const * const url)
     }
 }
 
-static void restore_values(char const * const url)
+static void restore_values(char const * const url, char const * const additional)
 {
     for (uint8_t channel = 0; channel < 4; channel++)
     {
@@ -164,15 +164,17 @@ static void restore_values(char const * const url)
     }
 }
 
-static void flicker_leds(char const * const url)
+static void flicker_leds(char const * const url, char const * const additional)
 {
     uint8_t channels[4] = {NO_CHANNEL, NO_CHANNEL, NO_CHANNEL, NO_CHANNEL};
 
     for (uint8_t i=0; i<4; i++)
     {
-        if (inrange<char>(url[9+i], '1', '4'))
+        char this_channel = additional[0];
+
+        if (inrange<char>(this_channel, '1', '4'))
         {
-            channels[i] = url[9+i] - '1';
+            channels[i] = this_channel - '1';
         }
         else
         {
@@ -191,7 +193,7 @@ static void flicker_leds(char const * const url)
     flicker_start(channels);
 }
 
-static void get_dimmer_value(char const * const url)
+static void get_dimmer_value(char const * const url, char const * const additional)
 {
     char dimmer_value[4];
     if (url)
@@ -199,7 +201,7 @@ static void get_dimmer_value(char const * const url)
         s_server.set_response_code_P(PSTR("200 OK"));
         s_server.finish_headers();
 
-        if ((url[5] >= '0') && url[5] <= '3')
+        if ((additional[0] >= '0') && additional[0] <= '3')
         {
             sprintf(dimmer_value, "%u", s_currentValues[0]);
             s_server.add_body(dimmer_value);
@@ -253,7 +255,7 @@ void raat_custom_setup(const raat_devices_struct& devices, const raat_params_str
 
     flicker_setup(params.pFlickerSettings);
 
-    restore_values(NULL);
+    restore_values(NULL, NULL);
     raat_logln_P(LOG_APP, PSTR("Restore values: %d,%d,%d,%d"),
         s_currentValues[0], s_currentValues[1],
         s_currentValues[2], s_currentValues[3]
